@@ -1,26 +1,26 @@
 import { EmailVO } from './../../domain/model/vos/email.vo';
-import { Container } from 'typedi';
 import { UserService } from './../../domain/services/user.service';
-import {Strategy, ExtractJwt , StrategyOptions} from 'passport-jwt';
+import { Strategy, ExtractJwt } from 'passport-jwt';
+import { PassportStrategy } from '@nestjs/passport';
+import { JwtPayload } from 'jsonwebtoken';
+import { User } from '../../domain/model/entities/user.entity';
+import { UnauthorizedException } from '@nestjs/common';
+export class JwtStrategy extends PassportStrategy(Strategy) {
+  constructor(private userService: UserService) {
+    super({
+      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      ignoreExpiration: false,
+      secretOrKey: 'secret',
+    });
+  }
 
-const opts: StrategyOptions = {
-    jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-    secretOrKey: 'secret'
-};
-
-export default new Strategy(opts, async (payload, done) => {
-    try {
-
-        const {email} = payload;
-        const userService = Container.get(UserService);
-        const user = await userService.getByEmail(EmailVO.create(email));
-        if (user) {
-            return done(null, user);
-        }
-        return done(null, false, {message: 'User not found'});
-
-    }catch(err) {
-        console.log(err);
+  async validate(payload: JwtPayload): Promise<User> {
+    const user = await this.userService.getByEmail(
+      EmailVO.create(payload.email),
+    );
+    if (!user) {
+      throw new UnauthorizedException();
     }
-    
-});
+    return user;
+  }
+}

@@ -47,5 +47,5 @@ export class DeleteCommentUseCase {
 export type DeleteCommentRequest = {
   idPost: string;
   idComment: string;
-  user: User;
+  user?: User;
 };
