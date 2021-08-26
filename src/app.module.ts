@@ -1,15 +1,11 @@
-import {
-  SignUpAuthorUseCase,
-  SignUpAuthorRequest,
-} from './application/usecases/auth/sign-up-author.usecase';
+import { LevelVO } from './domain/model/vos/level.vo';
+import { OffensiveWordType } from './domain/model/entities/offensive-word.entity';
+import { OffensiveWordService } from './domain/services/offensive-word.service';
 import { Repositories } from './infrastructure/repositories/index';
 import { Middlewares } from './infrastructure/middlewares/index';
 import { Services } from './domain/services/index';
 import { UsesCases } from './application/usecases/index';
 import { Controllers } from './infrastructure/controllers/index';
-import { UserService } from './domain/services/user.service';
-import { AuthorService } from './domain/services/author.service';
-import { GetAllOffensiveWordsUseCase } from './application/usecases/offensive-word/get-all-offensive-word.usecase';
 import {
   PostMongo,
   PostSchema,
@@ -29,23 +25,8 @@ import {
   AuthorMongo,
   AuthorSchema,
 } from './infrastructure/repositories/author.schema';
-import { CreateAuthorUseCase } from './application/usecases/authors/create-author.usecase';
-import {
-  AddCommentUseCase,
-  AddCommentRequest,
-} from './application/usecases/comments/add-comment.usecase';
-import { CreateOffensiveWordUseCase } from './application/usecases/offensive-word/create-offensive-word.usecase';
-import { OffensiveWordResponse } from './application/usecases/offensive-word/offensive-word.response';
-import {
-  CreatePostUseCase,
-  CreatePostRequest,
-} from './application/usecases/posts/create-post.usecase';
-import { UserType, User } from './domain/model/entities/user.entity';
-import { EmailVO } from './domain/model/vos/email.vo';
+import { WordVO } from './domain/model/vos/word.vo';
 import { IdVO } from './domain/model/vos/id.vo';
-import { NicknameVO } from './domain/model/vos/nickname.vo';
-import { PasswordVO } from './domain/model/vos/password.vo';
-import { RoleVO, Role } from './domain/model/vos/role.vo';
 
 const hostMongo = process.env.MONGO_HOST ?? 'localhost';
 const portMongo = process.env.APP_MONGO_PORT ?? '27018';
@@ -64,7 +45,7 @@ const dbNamePG = process.env.PG_DB_NAME ?? 'pgdb';
       {
         authSource: process.env.MONGO_AUTH_SOURCE ?? 'admin',
         auth: {
-          username: process.env.MONGO_AUTH_USER ?? 'admin',
+          user: process.env.MONGO_AUTH_USER ?? 'admin',
           password: process.env.MONGO_AUTH_PASS ?? 'admin',
         },
         useUnifiedTopology: true,
@@ -104,4 +85,18 @@ const dbNamePG = process.env.PG_DB_NAME ?? 'pgdb';
     ...Repositories,
   ],
 })
-export class AppModule {}
+export class AppModule implements OnModuleInit {
+  constructor(private offensiveWordService: OffensiveWordService) {}
+
+  async onModuleInit() {
+    const offensiveWords = await this.offensiveWordService.getAll();
+    if (offensiveWords.length == 0) {
+      const offensiveWord: OffensiveWordType = {
+        id: IdVO.create(),
+        word: WordVO.create('caca'),
+        level: LevelVO.create(3),
+      };
+      await this.offensiveWordService.persist(offensiveWord);
+    }
+  }
+}
