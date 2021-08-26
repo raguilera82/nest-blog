@@ -1,23 +1,28 @@
-import mongoose from 'mongoose';
+import { Prop, SchemaFactory, Schema } from '@nestjs/mongoose';
+import { Document } from 'mongoose';
 
-const OffensiveWordSchema = new mongoose.Schema({
-  id: {
+export type OffensiveWordDocument = OffensiveWordMongo & Document;
+
+@Schema({ collection: 'OffensiveWords' })
+export class OffensiveWordMongo {
+  @Prop({
     type: String,
     required: true,
-  },
-  word: {
+  })
+  id: string;
+
+  @Prop({
     type: String,
     required: true,
-  },
-  level: {
+  })
+  word: string;
+
+  @Prop({
     type: Number,
     required: true,
-  },
-});
+  })
+  level: number;
+}
 
-const OffensiveWordModel = mongoose.model(
-  'OffensiveWords',
-  OffensiveWordSchema,
-);
-
-export { OffensiveWordModel };
+export const OffensiveWordSchema =
+  SchemaFactory.createForClass(OffensiveWordMongo);

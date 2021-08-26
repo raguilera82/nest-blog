@@ -6,11 +6,14 @@ import { PasswordVO } from '../../domain/model/vos/password.vo';
 import { UserRepository } from '../../domain/repositories/user.repository';
 import { UserModel } from './user.schema';
 import { Injectable } from '@nestjs/common';
+import { InjectModel } from '@nestjs/sequelize';
 
 @Injectable()
 export class UserRepositoryPG implements UserRepository {
+  constructor(@InjectModel(UserModel) private userModel: typeof UserModel) {}
+
   async getByEmail(email: EmailVO): Promise<User | null> {
-    const userDB: any = await UserModel.findOne({
+    const userDB: any = await this.userModel.findOne({
       where: {
         email: email.value,
       },
@@ -31,7 +34,7 @@ export class UserRepositoryPG implements UserRepository {
   }
 
   async update(user: User): Promise<void> {
-    await UserModel.update(
+    await this.userModel.update(
       {
         id: user.id.value,
         email: user.email.value,
@@ -46,7 +49,7 @@ export class UserRepositoryPG implements UserRepository {
   }
 
   async getAll(): Promise<User[]> {
-    const users = await UserModel.findAll({});
+    const users = await this.userModel.findAll({});
     return users.map((ofModel: any) => {
       const userData: UserType = {
         id: IdVO.createWithUUID(ofModel.id),
@@ -59,7 +62,7 @@ export class UserRepositoryPG implements UserRepository {
   }
 
   async getById(id: IdVO): Promise<User | null> {
-    const userDB: any = await UserModel.findOne({
+    const userDB: any = await this.userModel.findOne({
       where: {
         id: id.value,
       },
@@ -85,12 +88,14 @@ export class UserRepositoryPG implements UserRepository {
     const password = user.password.value;
     const role = user.role.value;
 
-    const userModel = UserModel.build({ id, email, password, role });
-    await userModel.save();
+    this.userModel.create({ id, email, password, role });
+
+    //const userModel = new UserModel({ id, email, password, role });
+    //await userModel.save();
   }
 
   async delete(id: IdVO): Promise<void> {
-    await UserModel.destroy({
+    await this.userModel.destroy({
       where: {
         id: id.value,
       },
@@ -98,7 +103,7 @@ export class UserRepositoryPG implements UserRepository {
   }
 
   async deleteAll(): Promise<void> {
-    await UserModel.destroy({
+    await this.userModel.destroy({
       where: {},
       truncate: true,
     });

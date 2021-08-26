@@ -1,3 +1,5 @@
+import { Injectable } from '@nestjs/common';
+import { PostDocument, PostMongo } from './post.schema';
 import { TimestampVO } from './../../domain/model/vos/timestamp.vo';
 import {
   Comment,
@@ -11,14 +13,20 @@ import { PostType } from './../../domain/model/entities/post.entity';
 import { Post } from '../../domain/model/entities/post.entity';
 import { IdVO } from '../../domain/model/vos/id.vo';
 import { PostRepository } from '../../domain/repositories/post.repository';
-import { PostModel } from './post.schema';
 import { ContentVO } from '../../domain/model/vos/content.vo';
 import { TitleVO } from '../../domain/model/vos/title.vo';
 import { NameAuthorVO } from '../../domain/model/vos/name-author.vo';
 import { NicknameVO } from '../../domain/model/vos/nickname.vo';
 import { ContentCommentVO } from '../../domain/model/vos/content-comment.vo';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
 
+@Injectable()
 export class PostRepositoryMongo implements PostRepository {
+  constructor(
+    @InjectModel(PostMongo.name) private postModel: Model<PostDocument>,
+  ) {}
+
   async save(post: Post): Promise<void> {
     const newPost = {
       id: post.id.value,
@@ -39,7 +47,7 @@ export class PostRepositoryMongo implements PostRepository {
       }),
     };
 
-    const postModel = new PostModel(newPost);
+    const postModel = new this.postModel(newPost);
     await postModel.save();
   }
 
@@ -48,7 +56,7 @@ export class PostRepositoryMongo implements PostRepository {
   }
 
   async getById(id: IdVO): Promise<Post | null> {
-    const postDB: any = await PostModel.findOne({ id: id.value }).exec();
+    const postDB: any = await this.postModel.findOne({ id: id.value }).exec();
     if (!postDB) {
       return null;
     }
@@ -91,7 +99,7 @@ export class PostRepositoryMongo implements PostRepository {
   }
 
   async delete(id: IdVO): Promise<void> {
-    await PostModel.findOneAndRemove({ id: id.value });
+    await this.postModel.findOneAndRemove({ id: id.value });
   }
 
   async update(post: Post): Promise<void> {
@@ -100,6 +108,6 @@ export class PostRepositoryMongo implements PostRepository {
   }
 
   async deleteAll(): Promise<void> {
-    await PostModel.deleteMany({});
+    await this.postModel.deleteMany({});
   }
 }

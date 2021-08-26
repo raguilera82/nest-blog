@@ -1,4 +1,9 @@
-import { AnyObject } from 'mongoose';
+import {
+  OffensiveWordMongo,
+  OffensiveWordDocument,
+} from './offensive-word.schema';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
 import {
   OffensiveWord,
   OffensiveWordType,
@@ -7,19 +12,25 @@ import { IdVO } from '../../domain/model/vos/id.vo';
 import { LevelVO } from '../../domain/model/vos/level.vo';
 import { WordVO } from '../../domain/model/vos/word.vo';
 import { OffensiveWordRepository } from '../../domain/repositories/offensive-word.repository';
-import { OffensiveWordModel } from './offensive-word.schema';
+import { Injectable } from '@nestjs/common';
 
+@Injectable()
 export class OffensiveWordRepositoryMongo implements OffensiveWordRepository {
+  constructor(
+    @InjectModel(OffensiveWordMongo.name)
+    private offensiveWordModel: Model<OffensiveWordDocument>,
+  ) {}
+
   async update(offensiveWord: OffensiveWord): Promise<void> {
-    await OffensiveWordModel.findOneAndUpdate(
+    await this.offensiveWordModel.findOneAndUpdate(
       { id: offensiveWord.id.value },
       { word: offensiveWord.word.value, level: offensiveWord.level.value },
     );
   }
 
   async getAll(): Promise<OffensiveWord[]> {
-    const allOffensiveWords = await OffensiveWordModel.find({}).exec();
-    return allOffensiveWords.map((ofModel: AnyObject) => {
+    const allOffensiveWords = await this.offensiveWordModel.find({}).exec();
+    return allOffensiveWords.map((ofModel) => {
       const offensiveWordData: OffensiveWordType = {
         id: IdVO.createWithUUID(ofModel.id),
         level: LevelVO.create(ofModel.level),
@@ -30,9 +41,11 @@ export class OffensiveWordRepositoryMongo implements OffensiveWordRepository {
   }
 
   async getById(id: IdVO): Promise<OffensiveWord | null> {
-    const offensiveWordDB = await OffensiveWordModel.findOne({
-      id: id.value,
-    }).exec();
+    const offensiveWordDB = await this.offensiveWordModel
+      .findOne({
+        id: id.value,
+      })
+      .exec();
 
     if (!offensiveWordDB) {
       return null;
@@ -42,9 +55,11 @@ export class OffensiveWordRepositoryMongo implements OffensiveWordRepository {
   }
 
   async getByWord(word: WordVO): Promise<OffensiveWord | null> {
-    const offensiveWordDB = await OffensiveWordModel.findOne({
-      word: word.value,
-    }).exec();
+    const offensiveWordDB = await this.offensiveWordModel
+      .findOne({
+        word: word.value,
+      })
+      .exec();
 
     if (!offensiveWordDB) {
       return null;
@@ -59,16 +74,16 @@ export class OffensiveWordRepositoryMongo implements OffensiveWordRepository {
       word: offensiveWord.word.value,
       level: offensiveWord.level.value,
     };
-    const offensiveWordModel = new OffensiveWordModel(newOffensiveWord);
+    const offensiveWordModel = new this.offensiveWordModel(newOffensiveWord);
     await offensiveWordModel.save();
   }
 
   async delete(id: IdVO): Promise<void> {
-    await OffensiveWordModel.findOneAndRemove({ id: id.value });
+    await this.offensiveWordModel.findOneAndRemove({ id: id.value });
   }
 
   async deleteAll(): Promise<void> {
-    await OffensiveWordModel.deleteMany({});
+    await this.offensiveWordModel.deleteMany({});
   }
 
   private createOffensiveWord(offensiveWordDB: any) {

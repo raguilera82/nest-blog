@@ -1,16 +1,26 @@
+import { Injectable } from '@nestjs/common';
+import { AuthorMongo, AuthorDocument } from './author.schema';
 import { AuthorType } from './../../domain/model/entities/author.entity';
 import { Author } from '../../domain/model/entities/author.entity';
 import { NicknameVO } from '../../domain/model/vos/nickname.vo';
 import { AuthorRepository } from '../../domain/repositories/author.repository';
-import { AuthorModel } from './author.schema';
 import { IdVO } from '../../domain/model/vos/id.vo';
 import { NameAuthorVO } from '../../domain/model/vos/name-author.vo';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
 
+@Injectable()
 export class AuthorRepositoryMongo implements AuthorRepository {
+  constructor(
+    @InjectModel(AuthorMongo.name) private authorModel: Model<AuthorDocument>,
+  ) {}
+
   async searchByNickname(nickname: NicknameVO): Promise<Author | null> {
-    const authorDB: any = await AuthorModel.findOne({
-      nickname: nickname.value,
-    }).exec();
+    const authorDB = await this.authorModel
+      .findOne({
+        nickname: nickname.value,
+      })
+      .exec();
 
     if (!authorDB) {
       return null;
@@ -26,7 +36,9 @@ export class AuthorRepositoryMongo implements AuthorRepository {
   }
 
   async searchById(id: IdVO): Promise<Author | null> {
-    const authorDB: any = await AuthorModel.findOne({ id: id.value }).exec();
+    const authorDB: any = await this.authorModel
+      .findOne({ id: id.value })
+      .exec();
 
     if (!authorDB) {
       return null;
@@ -47,15 +59,15 @@ export class AuthorRepositoryMongo implements AuthorRepository {
       name: author.name.value,
       nickname: author.nickname.value,
     };
-    const authorModel = new AuthorModel(docAuthor);
+    const authorModel = new this.authorModel(docAuthor);
     await authorModel.save();
   }
 
   async deleteById(id: IdVO): Promise<void> {
-    await AuthorModel.findOneAndDelete({ id: id.value });
+    await this.authorModel.findOneAndDelete({ id: id.value });
   }
 
   async deleteAll(): Promise<void> {
-    await AuthorModel.deleteMany({});
+    await this.authorModel.deleteMany({});
   }
 }

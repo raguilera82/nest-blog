@@ -1,25 +1,31 @@
-import sequelize from '../config/postgresql';
-import { DataTypes } from 'sequelize';
+import { Column, Model, Table, DataType } from 'sequelize-typescript';
+import { Role } from '../../domain/model/vos/role.vo';
 
-const UserModel = sequelize.define('users', {
-  id: {
-    type: DataTypes.UUID,
+@Table({ tableName: 'users' })
+export class UserModel extends Model {
+  @Column({
+    type: DataType.UUID,
     allowNull: false,
     primaryKey: true,
-  },
-  email: {
-    type: DataTypes.STRING,
+  })
+  id: string;
+
+  @Column({
+    type: DataType.STRING,
     allowNull: false,
     unique: true,
-  },
-  password: {
-    type: DataTypes.STRING,
-    allowNull: false,
-  },
-  role: {
-    type: DataTypes.ENUM('ADMIN', 'PUBLISHER'),
-    allowNull: false,
-  },
-});
+  })
+  email: string;
 
-export { UserModel };
+  @Column({
+    type: DataType.STRING,
+    allowNull: false,
+  })
+  password: string;
+
+  @Column({
+    type: DataType.ENUM('ADMIN', 'PUBLISHER'),
+    allowNull: false,
+  })
+  role: Role;
+}

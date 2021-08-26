@@ -1,33 +1,46 @@
-import mongoose from 'mongoose';
+import { CommentType } from './../../domain/model/entities/comment.entity';
+import { Prop, SchemaFactory, Schema } from '@nestjs/mongoose';
+import { Document } from 'mongoose';
+import { AuthorMongo } from './author.schema';
 
-const PostSchema = new mongoose.Schema({
-  id: {
+export type PostDocument = PostMongo & Document;
+
+@Schema({ collection: 'Posts' })
+export class PostMongo {
+  @Prop({
     type: String,
     required: true,
-  },
-  title: {
+  })
+  id: string;
+
+  @Prop({
     type: String,
     required: true,
-  },
-  content: {
+  })
+  title: string;
+
+  @Prop({
     type: String,
     required: true,
-  },
-  author: {
+  })
+  content: string;
+
+  @Prop({
     id: String,
     name: String,
     nickname: String,
-  },
-  comments: [
+  })
+  author: AuthorMongo;
+
+  @Prop([
     {
       id: String,
       nickname: String,
       content: String,
       timestamp: String,
     },
-  ],
-});
+  ])
+  comments: CommentType;
+}
 
-const PostModel = mongoose.model('Posts', PostSchema);
-
-export { PostModel };
+export const PostSchema = SchemaFactory.createForClass(PostMongo);

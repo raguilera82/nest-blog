@@ -1,20 +1,27 @@
-import mongoose from 'mongoose';
+import { Prop, SchemaFactory, Schema } from '@nestjs/mongoose';
+import { Document } from 'mongoose';
 
-const AuthorSchema = new mongoose.Schema({
-  id: {
+export type AuthorDocument = AuthorMongo & Document;
+
+@Schema({ collection: 'Authors' })
+export class AuthorMongo {
+  @Prop({
     type: String,
     required: true,
-  },
-  name: {
+  })
+  id: string;
+
+  @Prop({
     type: String,
     required: true,
-  },
-  nickname: {
+  })
+  name: string;
+
+  @Prop({
     type: String,
     required: true,
-  },
-});
+  })
+  nickname: string;
+}
 
-const AuthorModel = mongoose.model('Authors', AuthorSchema);
-
-export { AuthorModel };
+export const AuthorSchema = SchemaFactory.createForClass(AuthorMongo);
